@@ -27,6 +27,9 @@ extern bool resetView;
 
 //single step
 extern bool single_step;
+extern bool save;
+extern bool load;
+extern char file_name[256]; 
 
 void updateMenu();
 

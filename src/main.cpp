@@ -48,30 +48,29 @@ int main(void)
   auto boxstyle = GL_Line(Width(2.), Colour(1.0, 1.0, 1.0));
 
 
-  PositionList positions;
-  LinConstraintList linconstraints;
-  AngConstraintList angconstraints;
+  Sim::PositionList positions;
+  Sim::LinConstraintList linconstraints;
+  Sim::AngConstraintList angconstraints;
 
   float linalpha = .000000001f;
   float angalpha = .00000001f; 
   int nsegs = 50;
-  float original_length = 20.f;
 
   srand((unsigned)time(0));
 
-  float x0 = -original_length/2;
+  float x0 = -Sim::originallength/2;
   float y = 0; 
   float x = x0;
   positions.emplace_back(vec2(x,y), true);
-  float dL = original_length/(float)nsegs;
+  float dL = Sim::originallength/(float)nsegs;
   for (float n = 1; n < nsegs; n++) {
     x = dL*n+x0;
     y = (x*x-x0*x0)*0.01;//0.1*(rand() - RAND_MAX/2)/float(RAND_MAX);
-    std::cout<<dL*n<<":"<<original_length<<std::endl;
+    std::cout<<dL*n<<":"<<Sim::originallength<<std::endl;
     positions.emplace_back(vec2(x,y));
   }
 
-  x = original_length/2;
+  x = Sim::originallength/2;
   y = 0;
 
   positions.emplace_back(vec2(x,y), true);
@@ -83,7 +82,7 @@ int main(void)
      angconstraints.emplace_back(pos-1, pos, pos+1, angalpha);
    }
 
-  AcceleratorGrid grid = AcceleratorGrid(vec2(-original_length/2 - 1.f), vec2(original_length/2 + 1.f), vec2(.5f));
+  Sim::AcceleratorGrid grid = Sim::AcceleratorGrid(vec2(-Sim::originallength/2 - 1.f), vec2(Sim::originallength/2 + 1.f), vec2(.5f));
   float sub_step = 0.1;
   std::vector<std::vector<Line>> animation;
   glClearColor(0.f, 0.f, 0.f, 0.f);
@@ -96,14 +95,28 @@ int main(void)
 
     if (panel::play){ 
       for (float deltat = 0.f; deltat < frame_advance; deltat += sub_step)
-        sim_iteration(positions, linconstraints, angconstraints, grid, sub_step, gravity, bounds, collisions); //use gravity, don't use bounds
+        Sim::sim_iteration(positions, linconstraints, angconstraints, grid, sub_step, gravity, bounds, collisions); //use gravity, don't use bounds
 
      } else {
       if (panel::single_step) {
-        sim_iteration(positions, linconstraints, angconstraints, grid, sub_step, gravity, bounds, collisions); //use gravity, don't use bounds
+        Sim::sim_iteration(positions, linconstraints, angconstraints, grid, sub_step, gravity, bounds, collisions); //use gravity, don't use bounds
         panel::single_step = false;
       }
+
+      if (panel::save) {
+
+        panel::save = false;
+        save_state(std::string(panel::file_name), positions, linconstraints, angconstraints);
+      }
+
+      if (panel::load) {
+
+        panel::load = false;
+        load_state(std::string(panel::file_name), positions, linconstraints, angconstraints);
+        grid = Sim::AcceleratorGrid(vec2(-Sim::originallength/2 - 1.f), vec2(Sim::originallength/2 + 1.f), vec2(.5f));
+      }
     }
+    
 
 
 
@@ -120,10 +133,10 @@ int main(void)
 
     }
    auto box = MultiLine();
-   box.push_back(Line(Point1(vec2(-original_length/2.0 ,-original_length/2),0),Point2(vec2(-original_length/2.0 ,original_length/2),0)));
-   box.push_back(Line(Point1(vec2(-original_length/2.0 ,-original_length/2),0),Point2(vec2(original_length/2.0 ,-original_length/2),0)));
-   box.push_back(Line(Point1(vec2(original_length/2.0 ,original_length/2),0),Point2(vec2(-original_length/2.0 ,original_length/2),0)));
-   box.push_back(Line(Point1(vec2(original_length/2.0 ,original_length/2),0),Point2(vec2(original_length/2.0 ,-original_length/2),0)));
+   box.push_back(Line(Point1(vec2(-Sim::originallength/2.0 ,-Sim::originallength/2),0),Point2(vec2(-Sim::originallength/2.0 ,Sim::originallength/2),0)));
+   box.push_back(Line(Point1(vec2(-Sim::originallength/2.0 ,-Sim::originallength/2),0),Point2(vec2(Sim::originallength/2.0 ,-Sim::originallength/2),0)));
+   box.push_back(Line(Point1(vec2(Sim::originallength/2.0 ,Sim::originallength/2),0),Point2(vec2(-Sim::originallength/2.0 ,Sim::originallength/2),0)));
+   box.push_back(Line(Point1(vec2(Sim::originallength/2.0 ,Sim::originallength/2),0),Point2(vec2(Sim::originallength/2.0 ,-Sim::originallength/2),0)));
 
    auto f1 = MultiLine();
    auto f2 = MultiLine();

@@ -21,6 +21,9 @@ bool play = false;
 // reset
 bool resetView = false;
 bool single_step = false;
+bool save = false;
+bool load = false;
+char file_name[256];
 
 void updateMenu() {
   using namespace ImGui;
@@ -50,6 +53,12 @@ void updateMenu() {
       if (Button("Single Step")) {     
         single_step = true;
       }
+
+      if (Button("Save"))
+        save = true;
+      if (Button("Load"))
+        load = true;
+      InputText("Filename", file_name, 256);
     }
 
     Spacing();
