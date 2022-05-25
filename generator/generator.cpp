@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <math.h>
+#include <algorithm>
 
 
 
@@ -48,7 +49,8 @@ int main(int argc, char const *argv[]) {
 	input_file >> angalpha;
 
 
-	float xmin, xmax, ymin, ymax, dx1, dy1, dx2, dy2;
+	float xmin, ymin, dx1, dy1, dx2, dy2;
+	int max_i, max_j;
 	int num_verts;
 	float vertx, verty;
 	std::vector<Position> verts;
@@ -59,20 +61,22 @@ int main(int argc, char const *argv[]) {
 	size_t end_vert = 0;
 
 	input_file >> xmin;
-	input_file >> xmax;
 	input_file >> ymin;
-	input_file >> ymax;
+	input_file >> max_i;
+	input_file >> max_j;
 	input_file >> dx1;
 	input_file >> dy1;
 	input_file >> dx2;
 	input_file >> dy2;
 	input_file >> num_verts;
 
-	size_t stride = ceil((xmin-xmax)/.1);
+	size_t stride = 0;
 
-	for (float x = xmin; x < xmax; x += .1)
-		for (float y = ymin; y < ymax; y += .1)
+	for (float x = xmin - std::max(dx1, dx2); x < bounds/2; x += .1) {
+		stride++;
+		for (float y = ymin - std::max(dy1, dy2); y < bounds/2; y += .1)
 			position_map.push_back(-1);
+	}
 
 	for (int i = 0; i < num_verts; i++) {
 
@@ -91,18 +95,9 @@ int main(int argc, char const *argv[]) {
 
 	float centerx = xmin;
 	float centery = ymin;
-	int i = 0;
 	bool done = false;
-	while (!done) {
-		int j = 0;
-		bool done_col = false;
-		while (!done_col) {
-			for (auto &vert:verts) {
-
-				if (vert.x + i *dx1 + j *dx2 < xmin || vert.y + i * dy1 + j * dy2 < ymin) break;
-				if (vert.x + i *dx1 + j *dx2 > xmax || vert.y + i * dy1 + j * dy2 > ymax) {done_col = true; break;}
-
-			}
+	for  (int i = 0; i < max_i; i++) {
+		for (int j = 0; j < max_j; j++) {
 
 			for (int num = 0; num < verts.size(); num++) {
 
@@ -120,6 +115,7 @@ int main(int argc, char const *argv[]) {
 					vert_map[num] = position_map[index];
 					already_in[num] = true;
 				}
+			}
 
 			for (int num = 0; num < verts.size(); num++) {
 
@@ -129,13 +125,7 @@ int main(int argc, char const *argv[]) {
 
 			for (int num = 0; num < verts.size(); num++)
 				angconstraints.push_back(AngConstraint(vert_map[(num-1) % verts.size()], vert_map[(num+1) % verts.size()], vert_map[num], ang0s[num]));
-			j++;
-			if (xmin + i *dx1 + j * dx2 > xmax || ymin + i *dy1 + j*dy2 > ymax)
-				done_col = true;
 		}
-		i++;
-		if (xmin + i *dx1 > xmax || ymin + i *dy1 > ymax)
-				done = true;
 	}
 
 	std::ofstream outfile(argv[2], std::fstream::out | std::fstream::trunc);
@@ -168,5 +158,5 @@ int main(int argc, char const *argv[]) {
 		outfile << indexa << " " << indexb << " "  << indexc << " " << ang0 << angalpha << "\n";
 
 	}
-}
+	
 }
