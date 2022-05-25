@@ -60,7 +60,7 @@ namespace Sim {
 		AngConstraint(PositionList::iterator apos1, 
 					  PositionList::iterator apos2, 
 					  PositionList::iterator aposc, 
-					  float analpha, float atheta0): pos1(apos1), pos2(apos2), posc(aposc), alpha(analpha), theta0(atheta0) {}
+					  float atheta0, float analpha): pos1(apos1), pos2(apos2), posc(aposc), theta0(atheta0, alpha(analpha)) {}
 
 	};
 
