@@ -49,7 +49,7 @@ int main(int argc, char const *argv[]) {
 	input_file >> angalpha;
 
 
-	float xmin, ymin, dx1, dy1, dx2, dy2;
+	float xmin, ymin, xstart, ystart, dx1, dy1, dx2, dy2;
 	int max_i, max_j;
 	int num_verts;
 	float vertx, verty;
@@ -62,6 +62,8 @@ int main(int argc, char const *argv[]) {
 
 	input_file >> xmin;
 	input_file >> ymin;
+	input_file >> xstart;
+	input_file >> ystart;
 	input_file >> max_i;
 	input_file >> max_j;
 	input_file >> dx1;
@@ -72,9 +74,9 @@ int main(int argc, char const *argv[]) {
 
 	size_t stride = 0;
 
-	for (float x = xmin - std::max(dx1, dx2); x < bounds/2; x += .1) {
+	for (float x = xmin; x < bounds/2; x += .05) {
 		stride++;
-		for (float y = ymin - std::max(dy1, dy2); y < bounds/2; y += .1)
+		for (float y = ymin; y < bounds/2; y += .05)
 			position_map.push_back(-1);
 	}
 
@@ -93,20 +95,17 @@ int main(int argc, char const *argv[]) {
 		ang0s.push_back(ang0);
 	}
 
-	float centerx = xmin;
-	float centery = ymin;
-	bool done = false;
 	for  (int i = 0; i < max_i; i++) {
 		for (int j = 0; j < max_j; j++) {
 
 			for (int num = 0; num < verts.size(); num++) {
 
-				size_t xindex = floor(verts[num].x + i *dx1 + j *dx2 - xmin);
+				size_t xindex = floor(verts[num].x + i * dx1 + j * dx2 - xmin);
 				size_t yindex = floor(verts[num].y + i * dy1 + j * dy2 - ymin);
 				size_t index = yindex * stride + xindex;
 
 				if (position_map[index] == -1) {
-					positions.push_back(Position(verts[num].x + i *dx1 + j *dx2, verts[num].y + i * dy1 + j * dy2));
+					positions.push_back(Position(xstart + verts[num].x + i *dx1 + j * dx2, ystart + verts[num].y + i * dy1 + j * dy2));
 					position_map[index] = end_vert;
 					vert_map[num] = end_vert++;
 					already_in[num] = false;
@@ -119,8 +118,19 @@ int main(int argc, char const *argv[]) {
 
 			for (int num = 0; num < verts.size(); num++) {
 
-				if (already_in[num] && already_in[(num+1) % verts.size()]) continue;
-				linconstraints.push_back(LinConstraint(vert_map[num], vert_map[(num + 1) % verts.size()]));
+				size_t vert1 = vert_map[num];
+				size_t vert2 = vert_map[(num + 1) % verts.size()];
+				bool doit = true;
+
+				for (auto const &constraint: linconstraints) {
+					if ((constraint.pos1 == vert1 && constraint.pos2 == vert2) ||
+						(constraint.pos1 == vert2 && constraint.pos1 == vert1)) {
+
+						doit = false;
+						break;
+					}
+				}
+				if (doit) linconstraints.push_back(LinConstraint(vert1, vert2));
 			}
 
 			for (int num = 0; num < verts.size(); num++)
